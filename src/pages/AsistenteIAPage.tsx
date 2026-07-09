@@ -80,13 +80,18 @@ Requisitos:
 }`;
 
     try {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-        {
+      // AQ. keys use Bearer token auth, not ?key= query param
+      const isAQKey = apiKey.startsWith('AQ.');
+      const url = isAQKey
+        ? 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'
+        : `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (isAQKey) headers['Authorization'] = `Bearer ${apiKey}`;
+
+      const response = await fetch(url, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers,
           body: JSON.stringify({
             contents: [
               {
