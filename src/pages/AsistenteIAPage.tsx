@@ -1,3 +1,4 @@
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import React, { useState } from 'react';
 import { 
   Bot, 
@@ -80,42 +81,15 @@ Requisitos:
 }`;
 
     try {
-      // AQ. keys use Bearer token auth, not ?key= query param
-      const isAQKey = apiKey.startsWith('AQ.');
-      const url = isAQKey
-        ? 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'
-        : `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (isAQKey) headers['Authorization'] = `Bearer ${apiKey}`;
+      const fullPrompt = systemInstruction
+        + '\n\nResponde ÚNICAMENTE con el JSON, sin texto adicional, sin bloques de código markdown.'
+        + `\n\nTransacción a contabilizar: "${userPrompt}"`;
 
-      const response = await fetch(url, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({
-            contents: [
-              {
-                parts: [
-                  { text: systemInstruction + '\n\nResponde ÚNICAMENTE con el JSON, sin texto adicional, sin bloques de código markdown.' },
-                  { text: `Transacción a contabilizar: "${userPrompt}"` }
-                ]
-              }
-            ],
-            generationConfig: {
-              temperature: 0.1,
-              maxOutputTokens: 1024
-            }
-          })
-        }
-      );
-
-      if (!response.ok) {
-        const errBody = await response.text();
-        throw new Error(`HTTP ${response.status}: ${errBody}`);
-      }
-
-      const data = await response.json();
-      const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      const result = await model.generateContent(fullPrompt);
+      const textResponse = result.response.text();
       
       if (!textResponse) {
         throw new Error('No se recibió respuesta válida del modelo.');
