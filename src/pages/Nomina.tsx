@@ -796,10 +796,48 @@ export const Nomina = () => {
             </div>
 
             <div className="p-6 space-y-6">
+              {/* Period selector */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block">Mes</label>
+                  <select
+                    value={payrollPeriod.split(' ')[0]}
+                    onChange={(e) => setPayrollPeriod(`${e.target.value} ${payrollPeriod.split(' ')[1]}`)}
+                    className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  >
+                    {['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'].map(m => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block">Año</label>
+                  <select
+                    value={payrollPeriod.split(' ')[1]}
+                    onChange={(e) => setPayrollPeriod(`${payrollPeriod.split(' ')[0]} ${e.target.value}`)}
+                    className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  >
+                    <option value="2025">2025</option>
+                    <option value="2026">2026</option>
+                    <option value="2027">2027</option>
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block">Período</label>
+                  <select
+                    className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  >
+                    <option value="mensual">Mensual completo</option>
+                    <option value="q1">1ª quincena (1–15)</option>
+                    <option value="q2">2ª quincena (16–30)</option>
+                  </select>
+                </div>
+              </div>
+
               <div className="p-4 bg-indigo-500/5 border border-indigo-500/15 rounded-2xl flex items-center justify-between text-xs">
                 <div className="space-y-1">
                   <p className="text-white font-bold">Consolidación de Liquidación</p>
-                  <p className="text-slate-500">Se procesarán todos los colaboradores registrados en el período activo.</p>
+                  <p className="text-slate-500">Período: <span className="text-indigo-400 font-bold">{payrollPeriod}</span> · Se procesarán todos los colaboradores registrados.</p>
                 </div>
                 <div className="text-right">
                   <p className="text-[10px] text-slate-500 uppercase tracking-widest">Colaboradores</p>

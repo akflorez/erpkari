@@ -81,7 +81,7 @@ Requisitos:
 
     try {
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
         {
           method: 'POST',
           headers: {
@@ -91,20 +91,22 @@ Requisitos:
             contents: [
               {
                 parts: [
-                  { text: systemInstruction },
+                  { text: systemInstruction + '\n\nResponde ÚNICAMENTE con el JSON, sin texto adicional, sin bloques de código markdown.' },
                   { text: `Transacción a contabilizar: "${userPrompt}"` }
                 ]
               }
             ],
             generationConfig: {
-              responseMimeType: 'application/json'
+              temperature: 0.1,
+              maxOutputTokens: 1024
             }
           })
         }
       );
 
       if (!response.ok) {
-        throw new Error('Error al conectar con la API de Gemini');
+        const errBody = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errBody}`);
       }
 
       const data = await response.json();
@@ -114,7 +116,13 @@ Requisitos:
         throw new Error('No se recibió respuesta válida del modelo.');
       }
 
-      const parsedProposal: Proposal = JSON.parse(textResponse);
+      // Strip possible markdown code fences (```json ... ```) that Gemini sometimes adds
+      const cleanJson = textResponse
+        .replace(/^```(?:json)?\s*/i, '')
+        .replace(/\s*```\s*$/, '')
+        .trim();
+
+      const parsedProposal: Proposal = JSON.parse(cleanJson);
       
       setMessages(prev => [...prev, {
         role: 'assistant',
