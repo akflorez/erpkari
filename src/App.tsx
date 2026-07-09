@@ -11,6 +11,7 @@ import { Conciliacion } from './pages/Conciliacion';
 import { Nomina } from './pages/Nomina';
 import { CalendarioFiscal } from './pages/CalendarioFiscal';
 import { Login } from './pages/Login';
+import { Configuracion } from './pages/Configuracion';
 
 function App() {
   const [activeTab, setActiveTab] = React.useState('dashboard');
@@ -31,7 +32,8 @@ function App() {
       {activeTab === 'conciliacion' && <Conciliacion />}
       {activeTab === 'nomina' && <Nomina />}
       {activeTab === 'calendario' && <CalendarioFiscal />}
-      {!['dashboard', 'inventarios', 'dian', 'telegram', 'inbox-telegram', 'ia', 'conciliacion', 'nomina', 'calendario'].includes(activeTab) && (
+      {activeTab === 'configuracion' && <Configuracion />}
+      {!['dashboard', 'inventarios', 'dian', 'telegram', 'inbox-telegram', 'ia', 'conciliacion', 'nomina', 'calendario', 'configuracion'].includes(activeTab) && (
         <div className="flex flex-col items-center justify-center h-[50vh] space-y-4">
           <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-400">
             <span className="font-bold text-2xl">?</span>

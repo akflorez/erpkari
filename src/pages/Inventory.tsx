@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Package, 
   Search, 
@@ -8,7 +8,8 @@ import {
   Plus,
   AlertCircle,
   Truck,
-  Layers
+  Layers,
+  X
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -17,15 +18,65 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-const products = [
-  { id: '1', name: 'Mango Tommy Atkins', category: 'Frutas', stock: 1200, minStock: 500, unit: 'kg', cost: 3200, price: 4500, status: 'normal' },
-  { id: '2', name: 'Papaya Criolla', category: 'Frutas', stock: 12, minStock: 100, unit: 'kg', cost: 1800, price: 2500, status: 'critical' },
-  { id: '3', name: 'Banano Urabá', category: 'Frutas', stock: 450, minStock: 400, unit: 'kg', cost: 1200, price: 1800, status: 'warning' },
-  { id: '4', name: 'Aguacate Hass', category: 'Frutas', stock: 800, minStock: 300, unit: 'kg', cost: 5500, price: 7800, status: 'normal' },
-  { id: '5', name: 'Piña Oro Miel', category: 'Frutas', stock: 0, minStock: 200, unit: 'unid', cost: 2800, price: 4200, status: 'out' },
-];
-
 export const Inventory = () => {
+  const [productList, setProductList] = useState([
+    { id: '1', name: 'Mango Tommy Atkins', category: 'Frutas', stock: 1200, minStock: 500, unit: 'kg', cost: 3200, price: 4500, status: 'normal' },
+    { id: '2', name: 'Papaya Criolla', category: 'Frutas', stock: 12, minStock: 100, unit: 'kg', cost: 1800, price: 2500, status: 'critical' },
+    { id: '3', name: 'Banano Urabá', category: 'Frutas', stock: 450, minStock: 400, unit: 'kg', cost: 1200, price: 1800, status: 'warning' },
+    { id: '4', name: 'Aguacate Hass', category: 'Frutas', stock: 800, minStock: 300, unit: 'kg', cost: 5500, price: 7800, status: 'normal' },
+    { id: '5', name: 'Piña Oro Miel', category: 'Frutas', stock: 0, minStock: 200, unit: 'unid', cost: 2800, price: 4200, status: 'out' },
+  ]);
+
+  const [showModal, setShowModal] = useState(false);
+  const [name, setName] = useState('');
+  const [category, setCategory] = useState('Frutas');
+  const [stock, setStock] = useState(100);
+  const [minStock, setMinStock] = useState(50);
+  const [unit, setUnit] = useState('kg');
+  const [cost, setCost] = useState(3000);
+  const [price, setPrice] = useState(4500);
+
+  const handleCreateProduct = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Calculate status based on stock and minStock
+    let status: 'normal' | 'warning' | 'critical' | 'out' = 'normal';
+    if (stock === 0) {
+      status = 'out';
+    } else if (stock < minStock / 2) {
+      status = 'critical';
+    } else if (stock < minStock) {
+      status = 'warning';
+    }
+
+    const newProd = {
+      id: String(productList.length + 1),
+      name,
+      category,
+      stock,
+      minStock,
+      unit,
+      cost,
+      price,
+      status
+    };
+
+    setProductList([...productList, newProd]);
+    setShowModal(false);
+    
+    // Reset form fields
+    setName('');
+    setStock(100);
+    setMinStock(50);
+    setCost(3000);
+    setPrice(4500);
+  };
+
+  // Dynamic statistics
+  const totalSKUs = productList.length;
+  const criticalAlerts = productList.filter(p => p.status === 'critical' || p.status === 'out').length;
+  const totalValuation = productList.reduce((sum, p) => sum + (p.stock * p.cost), 0);
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Header */}
@@ -42,7 +93,10 @@ export const Inventory = () => {
             <Truck size={18} />
             Movimientos
           </button>
-          <button className="btn-premium">
+          <button 
+            onClick={() => setShowModal(true)}
+            className="btn-premium"
+          >
             <Plus size={18} />
             Nuevo Producto
           </button>
@@ -57,7 +111,7 @@ export const Inventory = () => {
           </div>
           <div>
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Total SKUs</p>
-            <p className="text-2xl font-bold text-white">42</p>
+            <p className="text-2xl font-bold text-white">{totalSKUs}</p>
           </div>
         </div>
         <div className="glass-card flex items-center gap-4 py-4">
@@ -66,7 +120,7 @@ export const Inventory = () => {
           </div>
           <div>
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Alertas Críticas</p>
-            <p className="text-2xl font-bold text-white">3</p>
+            <p className="text-2xl font-bold text-white">{criticalAlerts}</p>
           </div>
         </div>
         <div className="glass-card flex items-center gap-4 py-4">
@@ -75,7 +129,7 @@ export const Inventory = () => {
           </div>
           <div>
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Valorización</p>
-            <p className="text-2xl font-bold text-white">$45.8M</p>
+            <p className="text-2xl font-bold text-white">${(totalValuation / 1000000).toFixed(1)}M</p>
           </div>
         </div>
       </div>
@@ -118,7 +172,7 @@ export const Inventory = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {products.map((p) => (
+              {productList.map((p) => (
                 <tr key={p.id} className="hover:bg-white/[0.02] active:bg-white/[0.04] transition-colors cursor-pointer group">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
@@ -144,6 +198,7 @@ export const Inventory = () => {
                             p.status === 'critical' ? "w-2 bg-rose-500" : 
                             p.status === 'warning' ? "w-10 bg-amber-500" : "w-16 bg-emerald-500"
                           )} 
+                          style={{ width: `${Math.min((p.stock / p.minStock) * 50, 100)}%` }}
                         />
                       </div>
                     </div>
@@ -181,16 +236,137 @@ export const Inventory = () => {
             </tbody>
           </table>
         </div>
-        
-        <div className="p-4 border-t border-white/5 bg-white/[0.01] flex justify-between items-center px-8">
-          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Mostrando 5 de 142 productos</p>
-          <div className="flex gap-2">
-            <button className="w-8 h-8 rounded-lg border border-white/5 flex items-center justify-center text-slate-500 hover:text-white disabled:opacity-30" disabled>1</button>
-            <button className="w-8 h-8 rounded-lg border border-white/5 flex items-center justify-center text-slate-500 hover:text-white">2</button>
-            <button className="w-8 h-8 rounded-lg border border-white/5 flex items-center justify-center text-slate-500 hover:text-white">3</button>
+      </div>
+
+      {/* Create Product Modal overlay */}
+      {showModal && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[100] flex items-center justify-center p-6 animate-in fade-in duration-200">
+          <div className="glass rounded-3xl w-full max-w-md overflow-hidden border-white/10 shadow-[0_0_50px_rgba(99,102,241,0.15)] relative">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-500" />
+            
+            {/* Modal Header */}
+            <div className="p-6 border-b border-white/5 flex items-center justify-between bg-white/[0.01]">
+              <div className="flex items-center gap-2">
+                <Plus size={18} className="text-indigo-400" />
+                <h3 className="text-lg font-bold text-white">Nuevo Producto Agrícola</h3>
+              </div>
+              <button 
+                onClick={() => setShowModal(false)}
+                className="w-8 h-8 rounded-lg hover:bg-white/10 flex items-center justify-center text-slate-400 transition-all"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleCreateProduct} className="p-6 space-y-4">
+              {/* Product name */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest block">Nombre del Producto</label>
+                <input 
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Ej. Mango Tommy Atkins"
+                  className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              {/* Category and unit */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest block">Categoría</label>
+                  <select 
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  >
+                    <option value="Frutas">Frutas</option>
+                    <option value="Empaques">Empaques</option>
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest block">Unidad de Medida</label>
+                  <select 
+                    value={unit}
+                    onChange={(e) => setUnit(e.target.value)}
+                    className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  >
+                    <option value="kg">kilogramos (kg)</option>
+                    <option value="unid">unidades (unid)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Stocks limits */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest block">Stock Inicial</label>
+                  <input 
+                    type="number"
+                    required
+                    value={stock}
+                    onChange={(e) => setStock(parseInt(e.target.value) || 0)}
+                    className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 text-right font-mono"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest block">Stock Mínimo</label>
+                  <input 
+                    type="number"
+                    required
+                    value={minStock}
+                    onChange={(e) => setMinStock(parseInt(e.target.value) || 0)}
+                    className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 text-right font-mono"
+                  />
+                </div>
+              </div>
+
+              {/* Cost & sales price */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest block">Costo Unitario ($)</label>
+                  <input 
+                    type="number"
+                    required
+                    value={cost}
+                    onChange={(e) => setCost(parseInt(e.target.value) || 0)}
+                    className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 text-right font-mono"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest block">Precio Venta ($)</label>
+                  <input 
+                    type="number"
+                    required
+                    value={price}
+                    onChange={(e) => setPrice(parseInt(e.target.value) || 0)}
+                    className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 text-right font-mono"
+                  />
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/5">
+                <button 
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="px-4 py-2 rounded-lg border border-white/10 hover:bg-white/5 text-xs font-bold text-slate-400 transition-all"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit"
+                  className="btn-premium py-2 px-4 font-bold text-xs"
+                >
+                  Guardar Producto
+                </button>
+              </div>
+            </form>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

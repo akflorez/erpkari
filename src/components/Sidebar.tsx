@@ -93,7 +93,15 @@ export const Sidebar = ({ activeTab, setActiveTab }: { activeTab: string, setAct
 
       {/* Bottom Actions */}
       <div className="p-4 space-y-1">
-        <button className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-slate-400 hover:bg-white/5 hover:text-white transition-all">
+        <button 
+          onClick={() => setActiveTab('configuracion')}
+          className={cn(
+            "w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all",
+            activeTab === 'configuracion' 
+              ? "bg-indigo-500/10 text-indigo-400" 
+              : "text-slate-400 hover:bg-white/5 hover:text-white"
+          )}
+        >
           <Settings size={22} />
           {!collapsed && <span className="font-medium text-sm">Configuración</span>}
         </button>

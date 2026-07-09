@@ -37,6 +37,14 @@ const taxList: TaxObligation[] = [
 export const CalendarioFiscal = () => {
   const [currentMonth, setCurrentMonth] = useState('Abril 2026');
   const [selectedDay, setSelectedDay] = useState<number | null>(12);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedDraft, setGeneratedDraft] = useState<string | null>(null);
+
+  const handleSelectDay = (day: number) => {
+    setSelectedDay(day);
+    setGeneratedDraft(null);
+    setIsGenerating(false);
+  };
 
   // Generate days for April 2026
   // April 1st, 2026 is a Wednesday (3rd day of the week)
@@ -117,7 +125,7 @@ export const CalendarioFiscal = () => {
             {daysGrid.map((item, idx) => (
               <div 
                 key={idx}
-                onClick={() => item.day && setSelectedDay(item.day)}
+                onClick={() => item.day && handleSelectDay(item.day)}
                 className={cn(
                   "h-16 rounded-xl border flex flex-col items-center justify-center relative transition-all duration-300 cursor-pointer",
                   item.day ? "hover:border-indigo-500/50 hover:bg-white/[0.01]" : "border-transparent cursor-default",
@@ -177,10 +185,60 @@ export const CalendarioFiscal = () => {
                     </div>
                   )}
 
-                  <button className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5">
-                    <Sparkles size={14} />
-                    Generar Borrador Declaración
+                  <button 
+                    disabled={isGenerating}
+                    onClick={() => {
+                      setIsGenerating(true);
+                      setTimeout(() => {
+                        setIsGenerating(false);
+                        setGeneratedDraft(ob.id);
+                      }, 1500);
+                    }}
+                    className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5"
+                  >
+                    {isGenerating ? (
+                      <>
+                        <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Procesando Declaración...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles size={14} />
+                        Generar Borrador Declaración
+                      </>
+                    )}
                   </button>
+
+                  {generatedDraft === ob.id && (
+                    <div className="mt-4 p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-2xl space-y-3 animate-in fade-in duration-300">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Borrador DIAN Generado</span>
+                        <span className="text-[9px] font-mono text-emerald-500">REF: 2026-{ob.id}</span>
+                      </div>
+                      <div className="space-y-1.5 text-xs">
+                        <div className="flex justify-between border-b border-white/5 pb-1">
+                          <span className="text-slate-400">Formulario:</span>
+                          <span className="text-white font-bold">{ob.form}</span>
+                        </div>
+                        <div className="flex justify-between border-b border-white/5 pb-1">
+                          <span className="text-slate-400">Año Gravable:</span>
+                          <span className="text-white font-mono font-bold">2026</span>
+                        </div>
+                        <div className="flex justify-between border-b border-white/5 pb-1">
+                          <span className="text-slate-400">Base Gravable:</span>
+                          <span className="text-white font-mono font-bold">
+                            {ob.id === 'OBL-01' ? '$73,800,000' : 
+                             ob.id === 'OBL-02' ? '$65,526,315' : 
+                             ob.id === 'OBL-04' ? '$124,545,454' : '$0'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-emerald-400 font-bold">Total a Pagar:</span>
+                          <span className="text-emerald-400 font-mono font-bold">${ob.estimatedAmount.toLocaleString('es-CO')}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))
             ) : (
@@ -198,7 +256,7 @@ export const CalendarioFiscal = () => {
             </div>
             <div className="divide-y divide-white/5 max-h-[300px] overflow-y-auto custom-scrollbar">
               {taxList.map((t) => (
-                <div key={t.id} className="p-4 flex items-center justify-between hover:bg-white/[0.01] transition-all cursor-pointer" onClick={() => setSelectedDay(t.dueDay)}>
+                <div key={t.id} className="p-4 flex items-center justify-between hover:bg-white/[0.01] transition-all cursor-pointer" onClick={() => handleSelectDay(t.dueDay)}>
                   <div>
                     <h4 className="text-xs font-bold text-white">{t.name}</h4>
                     <span className="text-[9px] font-mono text-slate-500">{t.dueDate}</span>
