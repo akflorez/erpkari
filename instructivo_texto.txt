@@ -1,0 +1,755 @@
+ContaERP
+Colombia · NIIF · DIAN 2026
+INSTRUCTIVO TÉCNICO COMPLETO
+Para el equipo de desarrollo Antigravity
+Cliente
+EMDECOB / Frutas La Primavera SAS
+Proyecto
+ContaERP — Sistema ERP Contable Colombiano
+Destinatario
+Equipo de desarrollo Antigravity
+Versión
+v3.0 — Marzo 2026
+Normativa
+NIIF para PYMES · PUC Decreto 2650/1993 · DIAN 2026 · Ley 2277/2022
+Empresa modelo
+Frutas La Primavera SAS — NIT 901.234.567-8 — Manizales, Caldas
+Tabla de Contenido
+1. Visión General del Sistema
+1.1 Propósito
+ContaERP es un sistema de gestión contable y operativa diseñado específicamente para empresas colombianas bajo normativa NIIF para PYMES (Grupo 2) y regulación DIAN 2026. Está concebido como una solución multi-empresa que permite a un contador independiente gestionar la contabilidad de múltiples clientes desde una sola plataforma, con inteligencia artificial integrada para la generación de asientos, auditoría automática y conciliación bancaria.
+EMPRESA PILOTO: 
+Frutas La Primavera SAS — Distribución mayorista de frutas frescas, Manizales, Caldas. CIIU 4631. Régimen: Responsable IVA. Grupo 2 NIIF PYMES.
+1.2 Módulos del sistema
+Módulo
+ID
+Descripción
+Dashboard
+dashboard
+KPIs en tiempo real: flujo de caja, P&G, balance, cartera, centros de costo, vencimientos fiscales
+Inventarios
+inventarios
+Control de stock por producto, alertas de mínimos, variación de costos, vencimientos, valor total
+DIAN / Facturas
+dian
+Facturación electrónica UBL 2.1, firma XAdES-BES, CUFE SHA-384, flujo de aprobación, notas crédito
+Asistente IA
+asientos
+Generación automática de asientos con Claude API, importación de archivos, edición inline
+Conciliación
+conciliacion
+Carga de extracto bancario CSV/XLS, match automático, partidas sin conciliar, generación de asiento
+Nómina
+nomina
+Liquidación completa: devengados, deducciones, aportes patronales, provisiones, SMMLV 2026
+Calendario fiscal
+calendario
+Calendario visual de vencimientos, tabla de obligaciones con días restantes y valores estimados
+Alertas
+alertas
+Alertas por categoría: vencimientos, inventario, costos, normativa. Niveles: Crítica/Advertencia/Info
+Parametrización
+parametrizacion
+PUC editable, centros de costo, centros de operación, tarifas de impuesto vigentes
+Empresas
+empresas
+Multi-empresa: agregar, activar, gestionar datos fiscales y normativos de cada empresa
+2. Stack Tecnológico
+Capa
+Tecnología
+Notas
+Frontend
+React 18 + TypeScript + Vite
+TailwindCSS · IBM Plex Sans/Mono
+Backend API
+FastAPI (Python 3.12)
+SQLAlchemy 2.0 async · Pydantic v2
+Base de datos
+PostgreSQL 16 (Neon)
+Redis 7 para caché y sesiones
+IA / LLM
+Claude claude-sonnet-4-20250514
+Anthropic API — asientos, auditoría, archivos
+Storage
+Cloudflare R2 / AWS S3
+XMLs DIAN, PDFs facturas — retención 5 años
+Cola de tareas
+Celery + Redis
+Transmisión DIAN, emails, nómina electrónica
+Despliegue FE
+Vercel
+CI/CD automático desde main branch
+Despliegue BE
+Render / Railway
+Auto-scale · Health checks · Logs
+Monitoreo
+Sentry + Datadog
+Error tracking · APM · Alertas
+PDF
+WeasyPrint (server) + React-PDF (client)
+Facturas, comprobantes, reportes NIIF
+Firma DIAN
+lxml + signxml + cryptography
+Certificado .p12/.pfx — XAdES-BES
+Auth
+bcrypt + JWT + sesiones Redis
+RBAC por empresa · roles: Admin/Contador/Operativo
+3. Marco Normativo Colombiano Aplicado
+3.1 NIIF y Grupos Contables
+El sistema implementa las normas internacionales de información financiera según la clasificación colombiana:
+Grupo
+Norma
+Aplica a
+Grupo 1
+NIIF Plenas (IASB)
+Grandes empresas — EMDECOB Ltda.
+Grupo 2
+NIIF para PYMES (Decreto 2420/2015)
+Medianas — Frutas La Primavera SAS
+Grupo 3
+Contabilidad simplificada
+Microempresas — no aplica en piloto
+3.2 Normas IAS / NIIF relevantes para Frutas La Primavera
+Norma
+Título
+Aplicación en el sistema
+NIC 1 / Secc. 3
+Presentación de EEFF
+Estado Situación Financiera, PyG, Cambios Patrimonio
+NIC 2 / Secc. 13
+Inventarios
+Costo promedio ponderado, VNR, frutas frescas
+NIC 7 / Secc. 7
+Estado de Flujos de Efectivo
+Método indirecto — módulo Dashboard
+NIC 12 / Secc. 29
+Impuesto a las ganancias
+Diferencias temporarias, impuesto diferido
+NIC 16 / Secc. 17
+Propiedad, planta y equipo
+Depreciación activos fijos
+NIC 41 / Secc. 34
+Activos biológicos
+Si hay cultivo propio — cuenta 1516
+3.3 Impuestos y retenciones vigentes 2026
+CRÍTICO: 
+Frutas frescas = IVA EXCLUIDO según artículo 477 del Estatuto Tributario (canasta familiar). No genera IVA en ventas ni IVA descontable en compras de frutas frescas. Implementar correctamente en todas las transacciones de venta.
+Impuesto / Retención
+Tarifa
+Base de cálculo
+Cuenta PUC
+Normativa
+IVA general
+19%
+Valor servicio/bien gravado
+2408
+Art. 468 ET
+IVA diferencial
+5%
+Bienes Sección 1 arancel
+2408
+Art. 468-1 ET
+IVA excluido (frutas)
+0% Excluido
+No aplica — art. 477 ET
+N/A
+Art. 477 ET
+Retención compras PJ
+2.5%
+Valor compra bruto
+2365
+Art. 401 ET
+Retención compras PN
+3.5%
+Valor compra bruto
+2365
+Art. 401 ET
+Retención servicios
+4%
+Valor del servicio
+2365
+Art. 392 ET
+Retención honorarios
+11% / 10%
+Honorarios facturados
+2365
+Art. 392 ET
+Retención arrendamientos
+3.5%
+Canon arrendamiento
+2365
+Art. 401 ET
+ReteICA Manizales 4711
+5.5 por mil
+Ingresos brutos
+2367
+Decreto Mpal.
+ReteIVA (resp. gran contrib.)
+15% del IVA
+Valor del IVA generado
+2368
+Art. 437-1 ET
+SMMLV 2026
+$1.423.500
+Salario mínimo mensual legal
+—
+Decreto 2119/2025
+Aux. transporte 2026
+$200.000
+Salarios ≤ 2 SMMLV
+—
+Decreto 2119/2025
+4. Arquitectura del Sistema
+4.1 Arquitectura multi-tenant
+El sistema usa aislamiento lógico por empresa con company_id en todas las tablas. Cada empresa tiene su propio PUC, períodos fiscales, resolución DIAN, certificado digital y roles de usuario. El cambio de empresa en el frontend refresca el contexto completo sin recargar la aplicación.
+Principio
+Implementación
+Aislamiento de datos
+company_id en todas las tablas — Row Level Security en PostgreSQL
+Contexto de empresa
+JWT incluye company_id — middleware valida en cada request
+Roles por empresa
+Admin · Contador · Operativo · Auditor · Solo lectura — tabla user_company_roles
+Períodos fiscales
+fiscal_years independientes por empresa — cierre y apertura controlados
+PUC personalizado
+Hereda PUC base + cuentas auxiliares propias de cada empresa
+Resolución DIAN
+Una resolución activa por empresa — prefijo, rango, certificado digital
+4.2 Esquema de base de datos — tablas principales
+Todas las tablas incluyen: id (UUID), company_id (FK), created_at, updated_at, created_by, deleted_at (soft delete).
+Tabla
+Campos clave y descripción
+companies
+nit, razon_social, tipo_sociedad, regimen_tributario, grupo_niif, city, ciiu, digital_cert_path, resolution_id
+chart_of_accounts (PUC)
+code (4-8 dígitos), name, account_type, nature (D/C), group_name, is_custom, parent_code
+fiscal_years
+year, start_date, end_date, status (open/closed), closed_by, closed_at
+journal_entries
+entry_number, entry_type (CE/CI/CG/CJ), date, description, status, total_debit, total_credit
+journal_lines
+entry_id, account_code, line_type (D/C), amount, description, cost_center_id, operation_id
+products (inventario)
+sku, name, category, stock, min_stock, unit, unit_cost, last_cost, sale_price, location, expiry_date
+stock_movements
+product_id, movement_type (IN/OUT/ADJ), quantity, unit_cost, reference, date
+invoices
+invoice_number, client_id, invoice_date, subtotal, iva_amount, total, cufe, xml_path, status, dian_response
+dian_events
+invoice_id, event_type, timestamp, response_code, response_message, xml_sent, xml_received
+employees
+cedula, name, cargo, salary, contract_type, arl_risk, eps, pension_fund, active, hire_date
+payroll_periods
+period_month, period_year, status, total_devengado, total_deductions, total_neto, total_cost
+cost_centers
+code, name, responsible, budget_amount, current_period_actual
+operation_centers
+code, name, center_type (Bodega/Pto.Venta/Ruta), city, active
+bank_reconciliations
+bank_name, period, bank_balance, book_balance, difference, status, file_path
+regulatory_alerts
+level (error/warn/info), category (venc/inv/cost/ley), title, description, days_to_deadline, source, read_at
+tax_rates
+tax_code, tax_name, rate, base_description, puc_account, valid_from, valid_to
+5. Módulos — Detalle Técnico de Implementación
+5.1 Dashboard
+Pantalla principal con métricas en tiempo real. Todos los datos provienen de vistas materializadas en PostgreSQL actualizadas cada 15 minutos por Celery.
+KPIs financieros: Ventas, Costo de ventas, Utilidad bruta, Cartera por cobrar con aging
+Flujo de caja: Gráfico de área con Chart.js — ingresos, egresos, neto — últimos 6 meses
+Balance general: Activo corriente/no corriente, Pasivo corriente/no corriente, Patrimonio
+Estado de resultados P&G: Comparativo mes actual vs mes anterior
+Cartera por cliente: Top 10 clientes con aging en días, estado (Al día / En riesgo / Vencida)
+Centros de costo: Ejecución presupuestal por área con semáforo visual
+Vencimientos fiscales: Próximos 4 con días restantes y nivel de urgencia
+Alertas de inventario: Panel inferior con productos en estado crítico
+5.2 Inventarios
+Gestión completa del inventario de frutas con alertas automáticas de stock, costos y vencimientos.
+Tabla de productos con: código, nombre, categoría, stock actual vs mínimo, costo unitario, precio venta, margen %, bodega, fecha vencimiento, estado
+Estados de inventario: Normal · Stock bajo (stock < mínimo) · Próximo a vencer (<3 días) · Costo en alza (>5%) · Agotado
+Panel de alertas de costos: Productos con variación de precio unitario, % de cambio, impacto en margen
+Filtros: Todos los productos / Solo con alertas
+CRUD de productos: código, nombre, categoría, stock inicial, mínimo, unidad, costo, precio, bodega, fecha vencimiento
+Integración contable: Al registrar entrada de mercancía → crea automáticamente asiento CE con cuenta 1435
+NOTA NIIF: 
+Las frutas frescas se valoran por costo promedio ponderado (NIC 2 / Sección 13). Si existe cultivo propio, aplicar NIC 41 con cuenta 1516 Activos biológicos. Validar siempre el VNR (Valor Neto Realizable).
+5.3 DIAN / Facturación Electrónica
+Módulo de facturación electrónica conforme a Resolución DIAN 000042/2020. El sistema soporta el modo de validación previa.
+5.3.1 Flujo completo de una factura electrónica
+Borrador: El usuario crea la factura con los datos del cliente (NIT, dirección, items, valores)
+Generar XML UBL 2.1: El sistema construye el documento XML según la especificación técnica DIAN
+Firma XAdES-BES: Se firma el XML con el certificado digital .p12/.pfx de la empresa
+Calcular CUFE: SHA-384 con los campos obligatorios según Resolución 000042
+Enviar a DIAN API: POST a https://vpfe.dian.gov.co/WcfDianCustomerServices.svc (producción)
+Respuesta DIAN: Aprobada (estado dian_ok) o Rechazada con código de error específico
+PDF + QR + Email: Generar representación gráfica y enviar al cliente
+Estado
+Código interno
+Acción disponible
+Borrador
+draft
+Enviar a DIAN / Editar / Eliminar
+Enviada — pendiente
+dian_pending
+Consultar estado / Esperar respuesta
+Aprobada DIAN
+dian_ok
+Descargar PDF / Enviar email / Registrar asiento
+Rechazada
+dian_rejected
+Ver error / Corregir XML / Reenviar
+5.3.2 Configuración de resolución de facturación
+Número de resolución habilitante: 18764031333163
+Prefijo: FV — Rango: FV-0001 a FV-5000
+Vigencia: 19/03/2025 — 19/03/2027
+Certificado digital: Archivo .p12 con clave — almacenado en S3 (nunca en base de datos)
+Ambiente habilitación: vpfe-hab.dian.gov.co — Ambiente producción: vpfe.dian.gov.co
+RECOMENDACIÓN CRÍTICA: 
+Para PYME, evaluar usar operador autorizado DIAN (Factus, Alegra, Siigo) en lugar de integración directa. La integración directa requiere certificado digital, firma XAdES-BES y mantenimiento de XML. Un operador autorizado simplifica considerablemente la implementación. Discutir con EMDECOB antes de iniciar módulo DIAN.
+5.4 Asistente Inteligente de Asientos (IA)
+El módulo de asistente de asientos usa la API de Claude (Anthropic) para generar propuestas de asientos contables a partir de descripciones en lenguaje natural.
+5.4.1 Flujo de generación
+El usuario describe la transacción en español (campo de texto libre)
+Opcional: sube un archivo CSV, Excel, PDF o imagen de factura
+El sistema envía un prompt estructurado a Claude claude-sonnet-4-20250514 con contexto de la empresa
+Claude responde con JSON estructurado: tipo comprobante, descripción, líneas débito/crédito
+El sistema muestra las líneas en tabla editable — el usuario puede modificar cuentas y valores
+Validación: débitos = créditos (diferencia < 1 COP)
+Al guardar: se crea el comprobante en la tabla journal_entries con sus journal_lines
+5.4.2 Prompt del sistema para Claude API
+El system prompt incluye: empresa activa, NIT, régimen tributario, grupo NIIF. Instrucciones específicas:
+PUC Decreto 2650/1993 adaptado NIIF
+IVA frutas frescas = excluido art. 477 ET
+Retención en la fuente → cuenta 2365
+IVA por pagar → cuenta 2408
+Respuesta estrictamente en JSON sin backticks
+{"type":"CE","typeName":"Comprobante de egreso","description":"...","observations":"...","lines":[{"type":"D","account":"6130","accountName":"Compras mercancías","description":"...","value":5200000}]}
+5.4.3 Importación de archivos
+El sistema soporta carga de archivos para análisis automático. Tipos soportados:
+CSV / Excel: Extractos bancarios, libros auxiliares — el sistema detecta columnas fecha/descripción/valor
+PDF: Facturas de proveedor — extracción de NIT, valor, conceptos
+Imagen (JPG/PNG): Fotografía de factura o recibo — OCR + interpretación por Claude Vision
+5.5 Conciliación Bancaria Automática
+El módulo de conciliación bancaria permite cargar el extracto del banco y compara automáticamente con los registros del libro contable.
+Formatos soportados: CSV (Davivienda, BBVA), Excel (Bancolombia), TXT (Banco de Bogotá)
+El sistema lee el archivo y detecta columnas: fecha, descripción, débito, crédito
+Algoritmo de matching: compara por fecha (+/- 2 días) y valor exacto
+Resultado: transacciones conciliadas + partidas sin conciliar (solo banco / solo libros)
+Para partidas sin conciliar: botón 'Crear asiento' que pre-carga el Asistente IA
+Estado final: saldo banco vs. saldo libros — diferencia a conciliar
+Los archivos del extracto se guardan en S3 para auditoría
+5.6 Nómina
+Liquidación completa de nómina según legislación laboral colombiana vigente 2026.
+Concepto
+Fórmula / Tarifa
+Cuenta PUC
+Salario básico
+Pactado — mínimo SMMLV $1.423.500
+5105 Gastos de personal
+Auxilio de transporte
+$200.000 si salario ≤ 2 SMMLV
+5110 Aux. transporte
+Salud empleado (deducción)
+4% del salario
+2370 Aportes nómina
+Pensión empleado (deducción)
+4% del salario
+2370 Aportes nómina
+Salud patronal
+8.5% del salario
+5105 / 2370
+Pensión patronal
+12% del salario
+5105 / 2370
+ARL — Riesgo I (oficina)
+0.522% del salario
+5105 / 2370
+ARL — Riesgo III (conductor)
+2.436% del salario
+5105 / 2370
+Caja de compensación
+4% del salario
+5105 / 2370
+Prima de servicios (provisión)
+Salario / 12
+5105 / 2610 Prima por pagar
+Cesantías (provisión)
+Salario / 12
+5105 / 2620 Cesantías
+Intereses sobre cesantías
+Cesantías × 1%
+5105 / 2625
+Vacaciones (provisión)
+Salario / 24
+5105 / 2615 Vacaciones
+5.7 Calendario Fiscal
+Módulo de visualización y seguimiento de obligaciones tributarias con alerta anticipada.
+Calendario visual mensual con puntos de color en días de vencimiento
+Tabla completa de obligaciones: IVA bimestral, Retención F.350, ICA, Nómina electrónica, Renta, Medios magnéticos
+Días restantes con semáforo: Rojo ≤14 días, Naranja ≤30 días, Azul >30 días
+Valores estimados calculados a partir de las transacciones del período
+Notificaciones por email 30, 14 y 7 días antes de cada vencimiento (Celery beat)
+5.8 Sistema de Alertas
+Las alertas se generan automáticamente por diferentes módulos del sistema y se clasifican en cuatro categorías:
+Categoría
+Origen
+Ejemplos de alerta
+Vencimientos (venc)
+Calendario fiscal
+IVA vence en X días, Retención vence en X días
+Inventario (inv)
+Módulo inventarios
+Stock < mínimo, Producto próximo a vencer, Agotado
+Costos (cost)
+Módulo inventarios
+Precio unitario subió >5% vs período anterior
+Normativa (ley)
+Monitor regulatorio
+Nuevas resoluciones DIAN, cambios de ley fiscal
+Los niveles de alerta son: Crítica (error) — Advertencia (warn) — Informativa (info). Las alertas se marcan como leídas por usuario.
+5.9 Parametrización del Sistema
+Módulo de configuración con cuatro secciones principales. Acceso restringido a rol Admin y Contador.
+5.9.1 Plan de Cuentas (PUC)
+El PUC base se carga desde Decreto 2650/1993 al crear la empresa. El sistema permite:
+Ver todas las cuentas del PUC con código, nombre, tipo, naturaleza (D/C), grupo
+Editar el nombre de cualquier cuenta (edición inline)
+Agregar cuentas auxiliares personalizadas (marcadas como 'Personalizada')
+Importar PUC completo desde archivo Excel/CSV
+Los cambios solo afectan la empresa activa — cada empresa tiene su propio PUC
+5.9.2 Centros de Costo
+Código único (CC-01 a CC-99), nombre, responsable, presupuesto mensual
+Seguimiento de ejecución: presupuesto vs. gasto real con semáforo visual
+Estados: Dentro del presupuesto / En riesgo (>90%) / Excedido (>100%)
+Los asientos pueden asociarse a un centro de costo (campo opcional en journal_lines)
+5.9.3 Centros de Operación
+Tipos: Bodega, Punto de Venta, Ruta, Sede
+Cada operación tiene: código, nombre, tipo, ciudad, activo/inactivo
+Permiten trazabilidad de movimientos de inventario por localización física
+5.9.4 Tarifas de Impuesto
+Tabla de referencia de todas las tarifas vigentes. No editable por el usuario final — se actualiza con cada reforma tributaria. Incluye: código tarifa, nombre, %, base de cálculo, cuenta PUC, normativa de referencia.
+5.10 Gestión Multi-Empresa
+El sistema permite gestionar múltiples empresas (clientes del contador) con total segregación de datos:
+Selector de empresa en la barra de navegación superior — cambio inmediato
+Al crear nueva empresa: razón social, NIT+DV, CIIU, tipo sociedad, régimen tributario, grupo NIIF, ciudad
+Cada empresa tiene: PUC propio, empleados, productos, facturas, asientos, parámetros fiscales
+Un usuario puede tener diferentes roles en diferentes empresas
+Cambio de empresa no requiere nuevo login — JWT multi-empresa
+6. Reportes Financieros NIIF
+El sistema genera los cuatro estados financieros básicos requeridos por NIIF para PYMES más los reportes fiscales DIAN.
+Reporte
+Norma
+Estructura
+Estado de Situación Financiera
+NIC 1 / Secc. 4
+Activo corriente/no corriente · Pasivo corriente/no corriente · Patrimonio
+Estado de Resultado Integral (P&G)
+NIC 1 / Secc. 5
+Ingresos · Costo de ventas · Utilidad bruta · Gastos operacionales · EBITDA · Utilidad neta
+Estado de Cambios en el Patrimonio
+NIC 1 / Secc. 6
+Saldo inicial · Resultado del período · Dividendos · Saldo final
+Estado de Flujos de Efectivo
+NIC 7 / Secc. 7
+Método indirecto: Actividades operativas · inversión · financiación
+Notas a los EEFF
+Secc. 8
+Políticas contables · revelaciones específicas · información complementaria
+Medios Magnéticos (Exógena)
+Res. 000070/2024
+Formatos 1001 (compras) · 1007 (pagos) · 1009 (retenciones) · 1014 (ingresos)
+7. API REST — Endpoints Principales
+Todos los endpoints requieren header: Authorization: Bearer {jwt_token}. Base URL: /api/v1/
+Método
+Endpoint
+Descripción
+POST
+/auth/login
+Login — retorna JWT con company_ids del usuario
+GET
+/companies
+Lista empresas accesibles por el usuario
+POST
+/companies
+Crear nueva empresa con todos sus parámetros
+GET
+/dashboard/kpis
+KPIs principales del período actual
+GET
+/dashboard/cashflow?months=6
+Flujo de caja últimos N meses
+GET/POST
+/inventory/products
+CRUD de productos — includes alertas activas
+GET
+/inventory/alerts
+Alertas activas de inventario (bajo stock, vencimientos)
+POST
+/inventory/movements
+Registrar entrada/salida/ajuste de inventario
+GET/POST
+/invoices
+CRUD facturas electrónicas
+POST
+/invoices/{id}/send-dian
+Enviar factura a DIAN — retorna CUFE o error
+GET
+/invoices/{id}/pdf
+Generar representación gráfica en PDF
+POST
+/ai/propose-entry
+Claude API — propuesta de asiento desde texto
+POST
+/ai/analyze-file
+Claude API — analizar archivo subido
+POST
+/reconciliation/upload
+Subir extracto bancario — retorna resultado del match
+POST/GET
+/journal-entries
+CRUD comprobantes contables
+GET
+/reports/trial-balance
+Balance de prueba del período
+GET
+/reports/income-statement
+P&G — Estado de resultados
+GET
+/reports/balance-sheet
+Estado de situación financiera
+GET
+/payroll/employees
+Lista empleados con datos laborales
+POST
+/payroll/calculate/{employee_id}
+Calcular liquidación completa de nómina
+GET
+/alerts
+Todas las alertas activas filtradas por categoría/nivel
+GET/PUT
+/parameters/puc
+Ver y editar Plan de Cuentas
+GET/POST
+/parameters/cost-centers
+CRUD centros de costo
+GET/POST
+/parameters/operations
+CRUD centros de operación
+8. Fases de Implementación — Plan de Trabajo
+Fase
+Semanas
+Módulos / Entregables
+Prioridad
+Dependencia
+1
+1–4
+Fundación: auth, multi-empresa, PUC, CI/CD, base de datos, migraciones
+CRÍTICA
+—
+2
+5–8
+Contabilidad core: asientos, comprobantes, libro mayor, balance prueba
+ALTA
+Fase 1
+3
+9–11
+DIAN: XML UBL 2.1, firma, CUFE, flujo de aprobación — INICIAR HABILITACIÓN EN PARALELO
+ALTA
+Fase 1
+4
+12–14
+Impuestos: IVA, retenciones, ReteICA, declaraciones F.300/F.350, ICA
+ALTA
+Fase 2
+5
+15–16
+Inventarios: CRUD, stock mínimo, alertas de costos, vencimientos
+MEDIA
+Fase 2
+6
+17–18
+Cartera y conciliación bancaria: CxC, aging, import extracto, auto-match
+MEDIA
+Fase 2
+7
+19–21
+Reportes NIIF: ESF, P&G, FE, Notas, Dashboard completo, Calendario fiscal
+MEDIA
+Fases 2–4
+8
+22–23
+Nómina, Alertas automáticas, Monitor regulatorio, Parametrización
+NORMAL
+Fase 2
+9
+24–25
+QA completo, pruebas con datos reales, capacitación, go-live piloto
+CRÍTICA
+Todas
+FAST TRACK para julio 2026: 
+Si se requiere go-live acelerado, implementar Fases 1–4 + 7 (semanas 1–21) = sistema funcional con contabilidad, DIAN, impuestos y reportes. Nómina e inventarios completos en fase posterior.
+9. Seguridad y Cumplimiento
+Área
+Implementación requerida
+Autenticación
+bcrypt para contraseñas · JWT con expiración 8h · Refresh tokens en Redis
+Autorización
+RBAC por empresa — middleware valida en cada request · No compartir datos entre empresas
+Datos sensibles
+Variables de entorno para secrets · Nunca hardcodear API keys · Certificados DIAN en S3 con KMS
+Retención documentos
+XMLs DIAN: 5 años mínimo — obligación legal · S3 con versioning habilitado · Nunca borrar
+Audit trail
+Todas las tablas tienen created_by, updated_by, timestamps · No borrado físico (soft delete)
+Encriptación
+TLS 1.3 en tránsito · Datos sensibles (NIT, salarios) encriptados en BD con pgcrypto
+Backup
+PostgreSQL: backup diario automatizado en Neon · Retención 30 días · S3: replicación cross-region
+Logs y monitoreo
+Sentry para errores · Todas las transacciones DIAN logueadas · Alertas en Slack/email
+10. Variables de Entorno Requeridas
+Variable
+Valor ejemplo
+Descripción
+DATABASE_URL
+postgresql://...
+Neon PostgreSQL — incluye pooling
+REDIS_URL
+redis://...
+Redis para caché, sesiones, Celery
+ANTHROPIC_API_KEY
+sk-ant-...
+Claude API para asistente IA
+JWT_SECRET_KEY
+256-bit random
+Secreto para firmar JWT — rotar cada 90 días
+DIAN_API_URL
+https://vpfe.dian.gov.co/...
+URL API DIAN producción
+DIAN_HAB_URL
+https://vpfe-hab.dian.gov.co/...
+URL API DIAN habilitación/pruebas
+AWS_ACCESS_KEY_ID
+AKIA...
+S3/R2 para almacenamiento XMLs
+AWS_SECRET_ACCESS_KEY
+...
+Secret S3/R2
+S3_BUCKET_DIAN
+contaerp-dian-docs
+Bucket para XMLs DIAN — retención 5 años
+SMTP_HOST / SMTP_USER
+smtp.gmail.com
+Para envío de facturas por email
+SENTRY_DSN
+https://...
+Error tracking — requerido en producción
+FRONTEND_URL
+https://contaerp.vercel.app
+URL del frontend para CORS y redirects
+11. Recomendaciones Específicas para Antigravity
+11.1 Lo que se debe hacer SÍ o SÍ desde el inicio
+INICIAR el proceso de habilitación DIAN en ambiente de pruebas desde la semana 1 — toma 2-4 semanas y es paralelo al desarrollo
+Implementar el PUC base desde Decreto 2650/1993 con las 5 clases y todos los grupos — no inventar cuentas
+Parametrizar IVA excluido para frutas frescas desde el inicio — es el core del negocio
+Hacer contabilidad en paralelo (manual + sistema) los primeros 3 meses para validar asientos automáticos con el contador
+Almacenar XMLs DIAN en S3 con versionado desde el día 1 — es obligación legal de 5 años
+Implementar soft delete en todas las tablas — nunca borrar registros contables definitivamente
+11.2 Lo que NO se debe hacer
+No construir módulo de nómina completo en v1 — importar totales desde sistema externo (Siigo/Helisa) es más seguro
+No hardcodear NIT, resolución DIAN ni tarifas — todo debe ser parametrizable por empresa
+No intentar integración directa DIAN sin antes evaluar operador autorizado — complejidad muy alta
+No usar WidthType.PERCENTAGE en ninguna parte del frontend — siempre DXA
+No borrar XMLs DIAN ni PDFs de facturas — retención legal mínima 5 años
+No compartir company_id entre sesiones de usuario — siempre validar en middleware
+11.3 Cuentas PUC específicas para Frutas La Primavera
+Cuenta
+Nombre
+Nota específica
+1105
+Caja
+Efectivo en caja menor
+1110
+Bancos — cta. corriente
+Davivienda / Bancolombia — conciliación mensual
+1435
+Inventario de mercancías
+Frutas frescas — costo promedio ponderado NIC 2
+1516
+Activos biológicos
+Solo si hay cultivo propio — NIC 41 valor razonable
+4135-01
+Venta mango Tommy
+Cuenta auxiliar por tipo de fruta — IVA excluido
+4135-02
+Venta papaya
+Cuenta auxiliar — IVA excluido art. 477 ET
+4135-03
+Venta banano
+Cuenta auxiliar — IVA excluido
+6130
+Compras de mercancías
+Frutas — costo de ventas
+5195-01
+Gastos de flete
+Centro de costo CC-04 Logística
+2367
+ReteICA por pagar
+ICA Manizales CIIU 4711 — 5.5 por mil desde jul 2026
+11.4 Proceso de habilitación DIAN paso a paso
+Obtener certificado digital de entidad certificadora autorizada (CERTICÁMARA, ANDES SAS)
+Registrar empresa en el Portal Operador DIAN como emisor de factura electrónica
+Configurar ambiente de habilitación: https://vpfe-hab.dian.gov.co
+Enviar mínimo 10 facturas de prueba en el ambiente de habilitación
+DIAN revisa y habilita la empresa en producción (2-4 semanas desde solicitud)
+Obtener resolución de facturación con número, prefijo y rango autorizado
+Configurar producción: https://vpfe.dian.gov.co/WcfDianCustomerServices.svc
+ALTERNATIVA RECOMENDADA: 
+Evaluar con EMDECOB el uso de un operador autorizado DIAN como Factus (https://factus.com.co), Alegra o Siigo. El operador maneja toda la infraestructura DIAN y expone una API REST simple. Reduce el tiempo de implementación de 3 semanas a 2-3 días.
+12. Glosario de Términos
+Término
+Definición
+PUC
+Plan Único de Cuentas — Decreto 2650/1993. Estructura jerárquica de cuentas contables colombianas
+NIIF
+Normas Internacionales de Información Financiera. Adoptadas en Colombia con Decreto 2420/2015
+DIAN
+Dirección de Impuestos y Aduanas Nacionales — entidad tributaria colombiana
+UBL 2.1
+Universal Business Language — estándar XML para factura electrónica DIAN
+CUFE
+Código Único de Factura Electrónica — hash SHA-384 que identifica unívocamente cada factura
+XAdES-BES
+Formato de firma digital XML avanzada requerido por DIAN para validar facturas
+Retención en la fuente
+Anticipo del impuesto de renta que el comprador descuenta al proveedor al momento del pago
+ReteICA
+Retención del Impuesto de Industria y Comercio — cobrado por el municipio
+IVA excluido
+Bienes que por ley NO generan IVA — no es lo mismo que exento (0%). Las frutas frescas son excluidas
+SMMLV
+Salario Mínimo Mensual Legal Vigente — 2026: $1.423.500 · Aux. transporte: $200.000
+Libro Diario
+Registro cronológico de todos los asientos contables por fecha
+Libro Mayor
+Registro agrupado por cuenta contable de todos los movimientos
+CE
+Comprobante de Egreso — documentos que acreditan una salida de dinero
+CI
+Comprobante de Ingreso — documentos que acreditan una entrada de dinero
+CG
+Comprobante de Contabilidad General — asientos de ajuste y reclasificación
+EEFF
+Estados Financieros — ESF (Balance), P&G, Cambios en Patrimonio, Flujos de Efectivo
+ESF
+Estado de Situación Financiera — antiguo Balance General
+Medios Magnéticos / Exógena
+Información que los declarantes deben reportar anualmente a la DIAN en formatos 1001-1014
+PILA
+Planilla Integrada de Liquidación de Aportes — para pagos de seguridad social
+NIT+DV
+Número de Identificación Tributaria + Dígito de Verificación
+Soft delete
+Borrado lógico — el registro se marca deleted_at pero permanece en base de datos para auditoría
+Multi-tenant
+Arquitectura donde múltiples clientes (empresas) comparten la misma instancia del sistema con datos segregados
+Fin del instructivo técnico. Versión 3.0 — Marzo 2026. Preparado por EMDECOB para el equipo Antigravity.
