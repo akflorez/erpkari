@@ -39,55 +39,98 @@ export const AsistenteIAPage = () => {
   const [proposal, setProposal] = useState<Proposal | null>(null);
   const [successMsg, setSuccessMsg] = useState('');
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     if (!prompt.trim()) return;
     
     setIsGenerating(true);
-    setMessages(prev => [...prev, { role: 'user', content: prompt }]);
-    
-    // Simulate Claude Sonnet response
-    setTimeout(() => {
-      let mockProposal: Proposal = {
-        type: 'CG',
-        description: 'Registro de compra de mercancía - Frutas frescas',
-        lines: [
-          { code: '143501', name: 'Inventarios - Frutas frescas', type: 'D', amount: 1500000, description: 'Compra de mercancía según factura' },
-          { code: '236540', name: 'Retención en la fuente (2.5%)', type: 'C', amount: 37500, description: 'Retención compras declarantes' },
-          { code: '111005', name: 'Bancos - Cuenta corriente', type: 'C', amount: 1462500, description: 'Pago neto factura' }
-        ]
-      };
+    const userPrompt = prompt;
+    setMessages(prev => [...prev, { role: 'user', content: userPrompt }]);
+    setPrompt('');
 
-      if (prompt.toLowerCase().includes('arriendo') || prompt.toLowerCase().includes('alquiler')) {
-        mockProposal = {
-          type: 'CE',
-          description: 'Pago de arrendamiento mensual local comercial',
-          lines: [
-            { code: '512010', name: 'Construcciones y edificaciones (Arriendos)', type: 'D', amount: 2000000, description: 'Pago canon de arrendamiento local' },
-            { code: '236530', name: 'Retención en la fuente - Arrendamientos (3.5%)', type: 'C', amount: 70000, description: 'Retención arriendo bien inmueble' },
-            { code: '111005', name: 'Bancos - Cuenta corriente', type: 'C', amount: 1930000, description: 'Giro canon de arrendamiento' }
-          ]
-        };
-      } else if (prompt.toLowerCase().includes('honorarios') || prompt.toLowerCase().includes('contador')) {
-        mockProposal = {
-          type: 'CE',
-          description: 'Honorarios asesoría contable y tributaria',
-          lines: [
-            { code: '511030', name: 'Asesoría financiera y contable', type: 'D', amount: 1200000, description: 'Honorarios contador mensualidad' },
-            { code: '236515', name: 'Retención en la fuente - Honorarios (10%)', type: 'C', amount: 120000, description: 'Retención honorarios PN declarante' },
-            { code: '111005', name: 'Bancos - Cuenta corriente', type: 'C', amount: 1080000, description: 'Pago honorarios mensuales' }
-          ]
-        };
-      }
-
+    const apiKey = (import.meta as any).env.VITE_GEMINI_API_KEY || '';
+    if (!apiKey) {
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: `Listo. He estructurado la propuesta para: "${mockProposal.description}". Revisa los códigos PUC y los valores en el panel de la derecha.`
+        content: '⚠️ Error: No se encontró la API Key de Gemini. Por favor crea un archivo .env en la raíz del proyecto y agrega VITE_GEMINI_API_KEY=tu_api_key para poder conectar con la IA.'
+      }]);
+      setIsGenerating(false);
+      return;
+    }
+
+    const systemInstruction = `Eres un asistente contable experto para el mercado de Colombia. Tu tarea es analizar la transacción descrita en español y generar un asiento contable de partida doble válido en formato JSON, usando el PUC de Colombia.
+Requisitos:
+1. El total de Débitos debe ser exactamente igual al total de Créditos.
+2. Cuentas comunes:
+   - 110505: Caja general (Activo)
+   - 111005: Bancos - Cuenta corriente (Activo)
+   - 143501: Inventario frutas frescas (Activo)
+   - 236540: ReteFuente compras (2.5%) (Pasivo)
+   - 236530: ReteFuente arrendamientos (3.5%) (Pasivo)
+   - 236515: ReteFuente honorarios (10%) (Pasivo)
+   - 512010: Gasto Arrendamiento (Gasto)
+   - 511030: Gasto Asesoría financiera/contable (Gasto)
+3. REGLA 2026: Frutas frescas (mangos, papayas, bananos, aguacates) son excluidas de IVA (0%), no generes cuenta de IVA.
+4. Formato de respuesta JSON estrictamente con la siguiente estructura:
+{
+  "type": "CE" | "CI" | "CG",
+  "description": "Breve descripción general",
+  "lines": [
+    { "code": "código cuenta de 6 dígitos", "name": "nombre cuenta", "type": "D" | "C", "amount": valor numérico entero, "description": "descripción de línea" }
+  ]
+}`;
+
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [
+                  { text: systemInstruction },
+                  { text: `Transacción a contabilizar: "${userPrompt}"` }
+                ]
+              }
+            ],
+            generationConfig: {
+              responseMimeType: 'application/json'
+            }
+          })
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Error al conectar con la API de Gemini');
+      }
+
+      const data = await response.json();
+      const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      
+      if (!textResponse) {
+        throw new Error('No se recibió respuesta válida del modelo.');
+      }
+
+      const parsedProposal: Proposal = JSON.parse(textResponse);
+      
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: `Listo. He analizado la transacción con la IA de Gemini y he estructurado la propuesta para: "${parsedProposal.description}". Revisa los códigos PUC y los valores en el panel de la derecha.`
       }]);
       
-      setProposal(mockProposal);
+      setProposal(parsedProposal);
+    } catch (error: any) {
+      console.error(error);
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: `Lo siento, no pude procesar la consulta con la IA (${error.message}). Por favor intenta de nuevo.`
+      }]);
+    } finally {
       setIsGenerating(false);
-      setPrompt('');
-    }, 1500);
+    }
   };
 
   const handleUpdateLine = (index: number, field: keyof JournalLine, value: any) => {
