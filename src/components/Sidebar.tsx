@@ -10,9 +10,7 @@ import {
   Bell, 
   Settings,
   ChevronLeft,
-  ChevronRight,
-  Send,
-  MessageSquare
+  ChevronRight
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -28,8 +26,6 @@ const navItems = [
   { id: 'ia', label: 'Asistente IA', icon: Bot, highlight: true },
   { id: 'conciliacion', label: 'Conciliación', icon: RefreshCcw },
   { id: 'nomina', label: 'Nómina', icon: Users },
-  { id: 'telegram', label: 'Telegram', icon: Send },
-  { id: 'inbox-telegram', label: 'Inbox Telegram', icon: MessageSquare },
   { id: 'calendario', label: 'Calendario Fiscal', icon: Calendar },
 ];
 
